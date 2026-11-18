@@ -7,3 +7,5 @@ wasm/src/*/build/
 test/out_*
 *.lz4b
 *.zip
+# Pyodide's standard library: the page loads it (blur-nx-installer de297ce found it never committed: shaders failed)
+!vendor/pyodide/python_stdlib.zip
