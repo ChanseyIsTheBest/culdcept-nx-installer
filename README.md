@@ -70,6 +70,18 @@ The example in this repository is Beautiful Katamari, the base's own game: the b
    python test/check_zip.py <out.zip> <game folder>
    ```
 
+   The page fetches the release files as GitHub Pages serves them, which is what git stores, not the working copy
+   these tests read. `.gitattributes` keeps `release/` byte for byte (`release/** -text`: with `core.autocrlf` git
+   would store a text file such as a `--file` README with other line ends than make_release.py hashed, and the page
+   would refuse it, as blur-nx-installer's did). So test the published bytes too: after the commit, and again on the
+   page after the push,
+
+   ```bash
+   python test/check_release.py [https://<user>.github.io/<repo>/]
+   ```
+
+   checks every release file the page fetches against the manifest (with no URL, as git stores it at `HEAD`).
+
 5. **The tools**: when the port's shader tools differ from the base's, copy them in with
    `python tools/sync_from_base.py --base <port root>`, and rebuild `wasm/renut_hlsl` and `wasm/uam` from the port
    (`BANJO_NX=<port root> bash wasm/src/translator/build_wasm_translator.sh`, the same for
@@ -112,6 +124,18 @@ python serve.py 8193 . --test-files <game folder> --test-out test/out_zip/packag
 
 and open http://127.0.0.1:8193/test/browser.html (`?compile=0` leaves the DKSH cache out), then
 `python test/check_zip.py test/out_zip/package.zip <game folder>`.
+
+Run it in Chrome (or Edge, or Firefox), not in an embedded browser that cannot start a worker from inside a worker
+(the Claude app's browser pane fails at "./glsl_worker.js: undefined": the GLSL, uam and LZ4 workers are started by
+`worker.js`). A headless Chrome with a scratch profile works (blur-nx-installer, 2026-11-19); the page sets its title
+to `DONE` or `FAILED`, which `http://127.0.0.1:9333/json` shows:
+
+```bash
+chrome --headless=new --remote-debugging-port=9333 --user-data-dir=<scratch folder> --no-first-run --disable-extensions http://127.0.0.1:8193/test/browser.html
+```
+
+`python test/check_release.py` checks the release files as the commit holds them, and with a URL (serve.py's, or the
+published page) as that serves them: test the published bytes, not the working copy.
 
 Outputs of the tests (zips, shader files) are game data: never commit or share them.
 

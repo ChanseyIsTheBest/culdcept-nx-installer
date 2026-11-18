@@ -10,7 +10,10 @@ import { glslMaker, uamCompile, workerPool } from './lib/pool.js';
 const quiet = () => ({ print: () => {}, printErr: () => {} });
 
 async function fetchBytes(url) {
-  const response = await fetch(url);
+  // no-cache (blur-nx-installer, 2026-11-19): the browser asks the server whether its copy is still current (an
+  // unchanged NRO still comes from its cache), so an old copy (GitHub Pages allows 10 minutes) never meets a newer
+  // manifest
+  const response = await fetch(url, { cache: 'no-cache' });
   if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
   return new Uint8Array(await response.arrayBuffer());
 }
