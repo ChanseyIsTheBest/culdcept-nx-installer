@@ -1065,8 +1065,8 @@
           "sha256": "db4eab58c407d01eb15edbb9f3714b0d0df2557ab48f07063804b7ec1e5b5db7"
         }
       ],
-      "deko3d_glsl_sha256": "cf5898433908eb2a566b4b42ec4afcf4550d725973dbde7ab03fb5fb51c00f29",
-      "deko3d_shaders_sha256": "2ec88d8e01fcb9b9d75651e8942bab800122610eb356da82eb5de13c26155422",
+      "deko3d_glsl_sha256": "444e24734ef27b80f7013595c7882b32ba6fe0bfa7eae91f78b8557fc64d5737",
+      "deko3d_shaders_sha256": "77549fabcf717821034dcc2c7730bc69d684bbd195967559a60e0a4dbf6c44a2",
       "game_files": {
         "alchemy.ini": 1610,
         "d02.dat": 312463360,
@@ -2462,5 +2462,5 @@
       }
     }
   ],
-  "shader_common_sha256": "a83bef3eb4f1e067f54b49dc1f855d25e82e611be13955214f2cedec49c0b7df"
+  "shader_common_sha256": "d0ee24e17ed7977f43dff4b9b96496b243151f829666d2413f2f274c75bdde03"
 }

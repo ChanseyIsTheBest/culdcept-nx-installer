@@ -15,7 +15,8 @@ import shutil
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PY = ['deko3d_glsl.py', 'deko3d_glsl_opt.py', 'gpr32_shaders.txt', 'lightbranch_shaders.txt', 'nullps_shaders.txt',
-      'skinonce_shaders.txt', 'early_alpha.py', 'renut_early_alpha.py']
+      'skinonce_shaders.txt', 'early_alpha.py', 'renut_early_alpha.py',
+      'noearly_keep.txt']  # 2026-11-18 (blur-nx-installer): deko3d_glsl_opt.py reads it beside itself
 COMMON = 'app/thirdparty/reblue-XenosRecomp/XenosRecomp/shader_common.h'
 
 
