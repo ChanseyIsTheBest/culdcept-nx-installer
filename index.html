@@ -61,7 +61,7 @@
     <span class="version" id="version"></span>
   </header>
   <section>
-    <h2>1. Choose your game</h2>
+    <h2><span class="n">1. </span>Choose your game</h2>
     <label class="button" for="iso">Choose the disc image (.iso)</label>
     <label class="button" for="folder">Choose an extracted folder</label>
     <input id="iso" type="file" accept=".iso">
@@ -70,8 +70,19 @@
     <div class="chosen" id="chosen">Nothing chosen yet.</div>
     <div class="detected" id="detected" hidden></div>
   </section>
+  <!-- blur-nx-installer (2026-11-18): the title update, for a port recompiled from one (game.json "update") -->
+  <section id="update-step" hidden>
+    <h2><span class="n"></span>Add <span data-update="title"></span></h2>
+    <label class="button" for="update">Choose the update package</label>
+    <label class="button" for="update-folder">Choose an extracted folder</label>
+    <input id="update" type="file">
+    <input id="update-folder" type="file" webkitdirectory>
+    <p class="note" data-text="update"></p>
+    <div class="chosen" id="update-chosen">Nothing chosen yet.</div>
+    <div class="detected" id="update-detected" hidden></div>
+  </section>
   <section id="dlc-step">
-    <h2>2. Add the DLC (optional)</h2>
+    <h2><span class="n">2. </span>Add the DLC (optional)</h2>
     <label class="button" for="dlc">Choose packages</label>
     <label class="button" for="dlc-folder">Choose a folder of packages</label>
     <input id="dlc" type="file" multiple>
@@ -81,7 +92,7 @@
     <div class="detected" id="dlc-detected" hidden></div>
   </section>
   <section>
-    <h2>3. Create the package</h2>
+    <h2><span class="n">3. </span>Create the package</h2>
     <label class="option" id="compile-row"><input id="compile" type="checkbox" checked>
       <span>Compile the shaders for the Switch here (recommended: the game starts and plays without compile stutters).
         Unticked, the Switch compiles each one the first time the game draws with it.</span></label>
@@ -92,7 +103,7 @@
     <div id="log" role="log" aria-live="polite"></div>
   </section>
   <section>
-    <h2>4. Copy it to the Switch</h2>
+    <h2><span class="n">4. </span>Copy it to the Switch</h2>
     <ol>
       <li>If you have an older version, delete its <code>switch/<span data-game="package"></span>/game_root</code> folder
         first: an unpacked archive left there is used instead of the packed one.</li>

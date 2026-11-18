@@ -1,6 +1,7 @@
 // renut_nx_ultimate_installer: the page's whole build (lib/install.js) in Node, on a game folder, into a zip:
 //   node test/full_node.mjs <game folder> <out.zip> [--dlc=<folder>] [--no-compile] [--threads=N] [--glsl-threads=N]
-//        [--native-glsl=<the port's glsl_opt folder>] [--reference]
+//        [--native-glsl=<the port's glsl_opt folder>] [--reference] [--update=<the title update's package or folder>]
+// --update (blur-nx, 2026-11-18): the title update game.json names, as the player gives it (lib/update.js).
 // --native-glsl counts the shaders whose GLSL is the native chain's byte for byte (the rest differ by DXC's version:
 // the page's DXC is v2025.1, the native build's 1.8.2407). --reference writes the shader files' SHA-256 into the build's
 // entry of release/manifest.json (the page then says whether the player's are the release's).
@@ -11,6 +12,7 @@ import { availableParallelism } from 'node:os';
 import { Worker } from 'node:worker_threads';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildPackage, findBuild } from '../lib/install.js';
+import { updateFromPackage } from '../lib/update.js';
 import { glslMaker, uamCompile, workerPool } from '../lib/pool.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -68,6 +70,7 @@ const tools = {
   glslThreads: Number(opt('glsl-threads', Math.min(cores, 8))),
   translator: game.shaders ? await (await imp('renut_hlsl.mjs'))(quiet()) : null,
   lzx: game.shaders ? await (await imp('lzx.mjs'))(quiet()) : null,
+  xexp: game.shaders && game.update ? await (await imp('xexp.mjs'))(quiet()) : null,
   startGlsl: (n) => tool('glsl_worker_node.mjs', n, glslMaker),
   startUam: (n) => tool('uam_worker_node.mjs', n, uamCompile),
   startLz4: (n) => tool('lz4_worker_node.mjs', n, (pool) => (bytes, level) =>
@@ -84,8 +87,23 @@ const sink = { write: async (bytes) => { fs.writeSync(fd, bytes); }, close: asyn
 // the shader files as they go into the zip, for the native comparison
 const files = folderFiles(gameDir);
 const dlcDir = opt('dlc', '');
+const updateAt = opt('update', '');
+let update = [];
+if (updateAt && fs.statSync(updateAt).isDirectory()) update = folderFiles(updateAt);
+else if (updateAt) {
+  const ufd = fs.openSync(updateAt, 'r');
+  const read = async (offset, length) => {
+    const b = Buffer.alloc(length);
+    const n = fs.readSync(ufd, b, 0, length, offset);
+    return new Uint8Array(b.buffer, b.byteOffset, n);
+  };
+  const pkg = await updateFromPackage(read, fs.fstatSync(ufd).size);
+  if (!pkg) throw new Error(`${updateAt}: not an Xbox 360 package`);
+  update = pkg.files;
+  console.log(`${stamp()} ${pkg.name}: ${update.length} files`);
+}
 const report = await buildPackage({
-  game, manifest, files, dlc: dlcDir ? folderFiles(dlcDir) : [], fetchRelease, tools, sink, compile: !flag('no-compile'),
+  game, manifest, files, dlc: dlcDir ? folderFiles(dlcDir) : [], update, fetchRelease, tools, sink, compile: !flag('no-compile'),
   events: {
     log: (t) => console.log(`${stamp()} ${t}`),
     progress: (f) => { const now = performance.now(); if (now - shown > 20000 || f === 1) { shown = now; console.log(`${stamp()} ${(100 * f).toFixed(0)} %`); } },

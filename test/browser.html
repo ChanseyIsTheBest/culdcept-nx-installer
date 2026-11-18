@@ -25,6 +25,24 @@ const list = await (await fetch('/_test_list')).json();
 const entries = list.map((f) => ({ path: f.path, size: f.size, url: `/_test/${f.path.split('/').map(encodeURIComponent).join('/')}` }));
 log(`${entries.length} test files, ${(entries.reduce((n, e) => n + e.size, 0) / 1048576).toFixed(0)} MB`);
 
+// blur-nx-installer (2026-11-18): the title update as the page takes a package (app.js, lib/update.js): the first file
+// --test-packages serves, read through range requests (lib/stfs.js), its files given to the worker as Blobs.
+const update = [];
+const pkgList = await fetch('/_pkg_list');
+if (pkgList.ok) {
+  const [name] = await pkgList.json();
+  if (name) {
+    const { updateFromPackage } = await import('../lib/update.js');
+    const url = `/_pkg/${encodeURIComponent(name)}`;
+    const size = Number((await fetch(url, { method: 'HEAD' })).headers.get('Content-Length'));
+    const read = async (o, l) => new Uint8Array(await (await fetch(url, { headers: { Range: `bytes=${o}-${o + l - 1}` } })).arrayBuffer());
+    const pkg = await updateFromPackage(read, size);
+    if (!pkg) throw new Error(`${name} is not an Xbox 360 package`);
+    for (const f of pkg.files) update.push({ path: f.path, size: f.size, file: new Blob([await f.read(0, f.size)]) });
+    log(`${pkg.name}: ${update.length} files`);
+  }
+}
+
 const channel = new MessageChannel();
 const port = channel.port2;
 let written = 0, buffered = [], bufferedBytes = 0, writes = Promise.resolve();
@@ -74,7 +92,7 @@ worker.onmessage = ({ data }) => {
 };
 worker.onerror = (e) => log(`worker error: ${e.message}`, 'bad');
 const compile = new URLSearchParams(location.search).get('compile') !== '0';
-worker.postMessage({ entries, dlc: [], compile, port: channel.port1 }, [channel.port1]);
+worker.postMessage({ entries, dlc: [], update, compile, port: channel.port1 }, [channel.port1]);
 const ok = await done;
 await writes;
 log(ok ? `TEST ZIP WRITTEN: ${written} bytes in ${((performance.now() - started) / 1000).toFixed(0)} s` : 'TEST FAILED', ok ? 'good' : 'bad');

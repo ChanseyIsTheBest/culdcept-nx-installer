@@ -21,7 +21,18 @@ The example in this repository is Beautiful Katamari, the base's own game: the b
    whether the page makes the shaders (`shaders`), which files are packed with LZ4 (`lz4`, case-insensitive regular
    expressions on paths in the game folder), which are left out (`skip`), which must be there (`needs`), which may be
    absent from a player's copy (`optional`; see step 4), whether it takes DLC packages (`dlc`, copied whole to
-   `switch/<package>/dlc/`, which the base installs at the first start), and the page's texts.
+   `switch/<package>/dlc/`, which the base installs at the first start), whether the port is recompiled from a title
+   update's code (`update`, below), and the page's texts.
+
+   **A port of a title update's code** (blur-nx-installer, 2026-11-18) sets `"update": { "title": "title update 2" }`
+   and a `texts.update` note. The page then asks for that update too: the Xbox 360 package the player has (a LIVE,
+   PIRS or CON file, read in the browser by `lib/stfs.js`), the folder that holds it, or the folder it was extracted to.
+   It is checked against the build's `update` (`make_release.py --update`: its `default.xexp`'s SHA-256 and its other
+   files with their sizes, `lib/update.js`). Its `default.xexp` goes next to `default.xex` in `game_root/` (the runtime
+   applies the patch) and its other files to `update/` (mounted as the console's `UPDATE:`). The shaders of
+   `default.xex` are read from the image with the patch applied, as the runtime loads it (`lib/xexp.js`: Xenia's
+   XexModule::ApplyPatch, the LZX delta step in `wasm/xexp`, built by `wasm/src/xexp/build.sh` from the SDK's own
+   libmspack): a patch can change every one of them (all 519 of Blur's).
 2. **The NRO**: build the port with `-DBANJO_RENUT_RELEASE_SHADERS=ON` (no game shader in it). A shader the game makes
    at runtime (one no game file holds) must stay in the NRO: `tools/make_release.py` stops when the port's shader dump
    has one that is neither in `default.xex` nor in a record.
@@ -37,7 +48,9 @@ The example in this repository is Beautiful Katamari, the base's own game: the b
 
    `--pipeline-list` (a console's or Ryujinx's `pipeline_list.bin`) gives `variants.txt`, the variants the page compiles,
    and ships the list itself (the console prebuilds those pipelines). `--file <src>[:<name>]` adds a release file (a
-   settings file, for example).
+   settings file, for example; a Windows path's drive is not taken for the name). `--update <folder>`, the title update
+   extracted, records it for a port of its code (step 1); then pass the update to the tests too
+   (`full_node.mjs --update=<package or folder>`, `check_zip.py <zip> <game> <update folder>`).
 
    The build also records the game's files with their sizes (`game_files`, from `--game`, less what `skip` leaves out).
    The page refuses a copy missing any of them, or with one of another size, and names what is wrong
@@ -72,6 +85,7 @@ change both sides together.
 |---|---|
 | `index.html`, `app.js` | the page: the game (a disc image, `lib/xiso.js`, or a folder), the DLC, the options |
 | `lib/game_check.js` | whether the chosen copy is whole: the build's `game_files`, what is missing named |
+| `lib/stfs.js`, `lib/update.js`, `lib/xexp.js`, `wasm/xexp` | a title update: its package read, checked and placed; its patch applied to `default.xex`'s image |
 | `worker.js` | runs `lib/install.js` off the page's thread and streams the zip to `sw.js` |
 | `lib/install.js` | the whole build: the release files, the shaders, the zip (the page and `test/full_node.mjs` both run it) |
 | `lib/sources.js` | the shader containers: `default.xex` (`lib/xex.js`, LZX in `wasm/lzx`) and the records' codings |

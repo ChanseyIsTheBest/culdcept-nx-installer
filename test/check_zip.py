@@ -7,6 +7,9 @@ game.json "skip" names left out), and every .lz4b entry's blocks decompressed an
   python test/check_zip.py <zip> <game folder>
 
 Needs the lz4 module (pip's lz4). Game data: never commit or share the zip.
+blur-nx (2026-11-18): with a third argument, the title update's extracted folder (when the build names one): its
+default.xexp in game_root/ and its other files in update/, each the update's own.
+  python test/check_zip.py <zip> <game folder> [<title update folder>]
 """
 import hashlib
 import json
@@ -61,6 +64,7 @@ def check_lz4b(z, info, original):
 
 def main():
     zip_path, game = sys.argv[1], sys.argv[2]
+    update = sys.argv[3] if len(sys.argv) > 3 else None
     cfg = json.load(open(os.path.join(HERE, 'game.json'), encoding='utf-8'))
     manifest = json.load(open(os.path.join(HERE, 'release', 'manifest.json'), encoding='utf-8'))
     xex_sha = file_sha(os.path.join(game, 'default.xex'))
@@ -93,13 +97,26 @@ def main():
                       ('' if not want else ', the reference build\'s' if got == want else ' (not the reference build\'s)'))
                 if want and got != want:
                     raise SystemExit(f'FAIL: {name} differs from the reference')
+        placed = set()  # the title update's entries, which the game folder's "skip" does not concern
+        if build.get('update'):
+            if not update:
+                raise SystemExit('FAIL: the build names a title update: pass its extracted folder as the third argument')
+            want = {'default.xexp': root + 'game_root/default.xexp',
+                    **{p: root + 'update/' + p for p in build['update']['files']}}
+            for rel, entry in want.items():
+                if entry not in names:
+                    raise SystemExit(f'FAIL: no {entry} (the title update file {rel})')
+                if entry_sha(z, entry) != file_sha(os.path.join(update, rel)):
+                    raise SystemExit(f'FAIL: {entry} is not the title update file {rel}')
+                placed.add(entry)
+            print(f'title update: {len(want)} files right (default.xexp in game_root/, {len(want) - 1} in update/)')
         count = packed_in = packed_out = 0
         for dirpath, _, files in os.walk(game):
             for f in sorted(files):
                 original = os.path.join(dirpath, f)
                 rel = os.path.relpath(original, game).replace(os.sep, '/')
                 if any(r.match(rel) for r in skip_res):
-                    if root + 'game_root/' + rel in names:
+                    if root + 'game_root/' + rel in names and root + 'game_root/' + rel not in placed:
                         raise SystemExit(f'FAIL: {rel} should have been left out')
                     continue
                 count += 1

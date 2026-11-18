@@ -6,15 +6,19 @@
 // nfsmw-nx-installer's download flow, StevensND; GPL-3.0).
 import { listXiso } from './lib/xiso.js';
 import { checkGameFiles, describeProblems, optionalPaths } from './lib/game_check.js';
+import { checkUpdate, updateFromPackage } from './lib/update.js';
 
 const $ = (id) => document.getElementById(id);
 const folderInput = $('folder'), isoInput = $('iso'), chosen = $('chosen'), detected = $('detected');
 const dlcInput = $('dlc'), dlcFolderInput = $('dlc-folder'), dlcChosen = $('dlc-chosen'), dlcDetected = $('dlc-detected');
+const updateInput = $('update'), updateFolderInput = $('update-folder'), updateChosen = $('update-chosen');
+const updateDetected = $('update-detected');
 const create = $('create'), compileBox = $('compile'), bar = $('bar'), logBox = $('log');
 const manifest = fetch('./release/manifest.json').then((r) => r.json());
 const game = fetch('./game.json').then((r) => r.json());
 let entries = null;
 let dlc = [];  // [{ path (under dlc/), size, file }]
+let update = null;  // blur-nx (2026-11-18): the title update when game.json names one: [{ path (in the update), size, file }]
 let busy = false;
 let downloadFrame = null;
 
@@ -23,7 +27,12 @@ game.then((g) => {
   document.title = `${g.package} web installer`;
   for (const el of document.querySelectorAll('[data-game]')) el.textContent = g[el.dataset.game];
   for (const el of document.querySelectorAll('[data-text]')) el.innerHTML = g.texts?.[el.dataset.text] || '';
-  $('dlc-step').hidden = !g.dlc;
+  if ($('dlc-step')) $('dlc-step').hidden = !g.dlc;  // a port's page may leave the DLC step out (blur-nx-installer)
+  $('update-step').hidden = !g.update;
+  for (const el of document.querySelectorAll('[data-update]')) el.textContent = g.update?.[el.dataset.update] || '';
+  // the steps' numbers, over the ones this game shows
+  let n = 0;
+  for (const el of document.querySelectorAll('section:not([hidden]) h2 .n')) el.textContent = `${++n}. `;
   $('compile-row').hidden = !g.shaders;
   create.textContent = `Create ${g.package}.zip`;
   manifest.then((m) => { $('version').textContent = `version ${m.version}`; });
@@ -52,8 +61,11 @@ function show(state, text, box = detected) {
   box.textContent = text;
 }
 
+let needsUpdate = false;
+game.then((g) => { needsUpdate = !!g.update; updateCreate(); });
+
 function updateCreate() {
-  create.disabled = busy || !entries;
+  create.disabled = busy || !entries || (needsUpdate && !update);
 }
 
 // list: [{ path (in the game), size, file, offset (in a disc image) }]
@@ -120,13 +132,98 @@ async function chooseDlc(list) {
   dlc = kept;
 }
 
-dlcInput.addEventListener('change', async (event) => {
+// blur-nx (2026-11-18): the title update (game.json "update"), as the Xbox 360 package the player has (lib/stfs.js reads
+// it here) or the folder it was extracted to; checked against the release's (lib/update.js). Its default.xexp goes to
+// game_root/, its other files to update/.
+const readerOf = (file) => async (offset, length) => new Uint8Array(await file.slice(offset, offset + length).arrayBuffer());
+const readable = (list) => list.map((e) => ({ ...e, read: readerOf(e.file) }));
+
+// The files of a package, as Blobs the worker can take; null when the file is not an Xbox 360 package.
+async function packageFiles(file) {
+  const pkg = await updateFromPackage(readerOf(file), file.size);
+  if (!pkg) return null;
+  const out = [];
+  for (const f of pkg.files) out.push({ path: f.path, size: f.size, file: new Blob([await f.read(0, f.size)]) });
+  return out;
+}
+
+async function chooseUpdate(list, what) {
+  update = null;
+  updateCreate();
+  const g = await game;
+  const title = g.update?.title || 'the title update';
+  const total = list.reduce((n, e) => n + e.size, 0);
+  updateChosen.textContent = `${what}: ${list.length} file${list.length === 1 ? '' : 's'}, ${formatSize(total)}`;
+  show('', 'Checking the update...', updateDetected);
+  let problem = 'This release takes no title update.';
+  for (const b of (await manifest).builds.filter((x) => x.update)) {
+    problem = await checkUpdate(b, readable(list), title);
+    if (!problem) break;
+  }
+  if (problem) {
+    show('bad', problem, updateDetected);
+    return;
+  }
+  show('good', `${title[0].toUpperCase()}${title.slice(1)}, supported: its default.xexp goes to switch/${g.package}/game_root/, ` +
+       `its other files to switch/${g.package}/update/.`, updateDetected);
+  update = list;
+  updateCreate();
+}
+
+updateInput.addEventListener('change', async (event) => {
+  const [file] = event.target.files;
+  event.target.value = '';
+  if (!file) return;
+  try {
+    const files = await packageFiles(file);
+    if (!files) {
+      updateChosen.textContent = file.name;
+      show('bad', `${file.name} is not an Xbox 360 package: choose the update's own file (a LIVE package, named like TU_...).`,
+           updateDetected);
+      return;
+    }
+    await chooseUpdate(files, file.name);
+  } catch (error) {
+    show('bad', `${file.name}: ${error.message}`, updateDetected);
+  }
+});
+
+updateFolderInput.addEventListener('change', async (event) => {
+  const files = [...event.target.files];
+  event.target.value = '';
+  if (!files.length) return;
+  const top = files[0].webkitRelativePath.split('/')[0];
+  try {
+    // an extracted update: its files from the folder that holds default.xexp (the chosen one or one inside it)
+    const xexp = files.find((f) => /(^|\/)default\.xexp$/i.test(f.webkitRelativePath));
+    if (xexp) {
+      const base = xexp.webkitRelativePath.slice(0, -'default.xexp'.length);
+      const inside = files.filter((f) => f.webkitRelativePath.startsWith(base));
+      await chooseUpdate(inside.map((file) => ({ path: file.webkitRelativePath.slice(base.length), size: file.size, file })), top);
+      return;
+    }
+    // a folder with the package in it (as the console keeps it): the first package of the folder that is the update
+    for (const f of files.filter((x) => x.size >= 0x1000).slice(0, 64)) {
+      const inside = await packageFiles(f);
+      if (inside && inside.some((x) => x.path.toLowerCase() === 'default.xexp')) {
+        await chooseUpdate(inside, `${top}: ${f.name}`);
+        return;
+      }
+    }
+    updateChosen.textContent = `${top}: ${files.length} files`;
+    show('bad', 'No default.xexp and no update package in this folder.', updateDetected);
+  } catch (error) {
+    show('bad', `${top}: ${error.message}`, updateDetected);
+  }
+});
+
+dlcInput?.addEventListener('change', async (event) => {
   const files = [...event.target.files];
   event.target.value = '';
   await chooseDlc(files.map((file) => ({ path: file.name, size: file.size, file })));
 });
 
-dlcFolderInput.addEventListener('change', async (event) => {
+dlcFolderInput?.addEventListener('change', async (event) => {
   const files = [...event.target.files];
   event.target.value = '';
   // the paths inside the chosen folder (its own name dropped): the game walks into subfolders of dlc/
@@ -177,7 +274,7 @@ const helper = downloadHelper();
 helper.catch(() => {});
 
 create.addEventListener('click', async () => {
-  if (!entries || busy) return;
+  if (!entries || busy || (needsUpdate && !update)) return;
   let controller;
   try {
     controller = await helper;
@@ -231,5 +328,5 @@ create.addEventListener('click', async () => {
     log(`Error: ${event.message}`, true);
     finish();
   };
-  worker.postMessage({ entries, dlc, compile: compileBox.checked, port: channel.port1 }, [channel.port1]);
+  worker.postMessage({ entries, dlc, update: update || [], compile: compileBox.checked, port: channel.port1 }, [channel.port1]);
 });

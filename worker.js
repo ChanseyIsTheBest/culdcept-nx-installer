@@ -3,6 +3,7 @@
 // nfsmw-nx-installer's download stream, GPL-3.0).
 import createRenutHlslModule from './wasm/renut_hlsl.mjs';
 import createLzxModule from './wasm/lzx.mjs';
+import createXexpModule from './wasm/xexp.mjs';
 import { buildPackage } from './lib/install.js';
 import { glslMaker, uamCompile, workerPool } from './lib/pool.js';
 
@@ -103,13 +104,15 @@ self.onmessage = async ({ data }) => {
       glslThreads,
       translator: game.shaders ? await createRenutHlslModule(quiet()) : null,
       lzx: game.shaders ? await createLzxModule(quiet()) : null,
+      xexp: game.shaders && game.update ? await createXexpModule(quiet()) : null,  // the title update's patch
       startGlsl: (n) => tool('./glsl_worker.js', n, glslMaker),
       startUam: (n) => tool('./uam_worker.js', n, uamCompile),
       startLz4: (n) => tool('./lz4_worker.js', n, (pool) => (bytes, level) =>
         pool.run({ bytes, level }, [bytes.buffer]).then((r) => r.bytes)),
     };
     const report = await buildPackage({
-      game, manifest, files: gameFiles(data.entries), dlc: gameFiles(data.dlc || []), fetchRelease, tools, sink,
+      game, manifest, files: gameFiles(data.entries), dlc: gameFiles(data.dlc || []), update: gameFiles(data.update || []),
+      fetchRelease, tools, sink,
       compile: data.compile !== false,
       events: {
         log: (text) => postMessage({ type: 'log', text }),

@@ -3,7 +3,7 @@
 
   python tools/make_release.py --port <port root> --nro <NRO> --game <game folder> [--edition "Xbox 360 disc"]
       [--records <records.json>] [--pipeline-list <pipeline_list.bin>] [--file <src>[:<name>] ...] [--version 1.0.0]
-      [--append]
+      [--update <the title update's extracted folder>] [--append]
 
 Writes into release/:
   <game.json "nro">     the NRO (built with -DBANJO_RENUT_RELEASE_SHADERS=ON: no game shader in it; the page makes them)
@@ -13,10 +13,12 @@ Writes into release/:
                         page compiles into the console's DKSH cache
   pipeline_list.bin     with --pipeline-list: the console prebuilds those pipelines at start (only with the cache)
   <name>                each --file (the settings file a release carries, for example)
-  manifest.json         per build: default.xex's SHA-256, the NRO's and every file's, the game's files with their sizes
-                        ("game_files", tools/game_files.py: the page refuses a copy without them), and where the page finds each of
-                        the port's shaders ("shaders": the containers of default.xex by SHA-256, and --records, the
-                        ones in the game's own files)
+  manifest.json         per build: default.xex's SHA-256, the NRO's and every file's; the game's files with their
+                        sizes ("game_files", tools/game_files.py: the page refuses a copy without them); with --update
+                        (blur-nx, 2026-11-18), the title update the port is recompiled from ("update": its default.xexp's
+                        SHA-256 and its other files with their sizes, lib/update.js); and where the page finds each of
+                        the port's shaders ("shaders": the containers of default.xex, or of its image with the update
+                        applied, by SHA-256, and --records, the ones in the game's own files)
 
 The shaders are the port's out/renut_shader_dump (every container its native build translates, named by the XXH3 Renut
 looks them up by). Each one must be in default.xex (found here in the port's decrypted image, out/renut_image.bin) or in
@@ -72,9 +74,15 @@ def generic_records(raw):
     out = []
     for r in raw:
         codec = r.get('codec') or ('cpdb' if r.get('compressed') else 'raw')
-        out.append({'file': r.get('file') or r['archive'], 'offset': r['offset'], 'stored': r['stored'],
-                    'size': r['size'], 'codec': codec,
-                    'containers': [{'at': c['at'], 'length': c['length'], 'sha256': c['sha256']} for c in r['containers']]})
+        rec = {'file': r.get('file') or r['archive'], 'offset': r['offset'], 'stored': r['stored'],
+               'size': r['size'], 'codec': codec, 'containers': []}
+        for c in r['containers']:
+            cont = {'at': c['at'], 'length': c['length'], 'sha256': c['sha256']}
+            if 'phys_at' in c:  # blur-nx: a container whose microcode is elsewhere in the record (lib/sources.js)
+                cont['phys_at'] = c['phys_at']
+                cont['phys_length'] = c['phys_length']
+            rec['containers'].append(cont)
+        out.append(rec)
     return out
 
 
@@ -92,6 +100,7 @@ def main():
     ap.add_argument('--records', default=None)
     ap.add_argument('--pipeline-list', default=None)
     ap.add_argument('--file', action='append', default=[])
+    ap.add_argument('--update', default=None, help='the title update, extracted (default.xexp and its data files)')
     ap.add_argument('--append', action='store_true', help='add this build to the manifest (another edition of the game)')
     a = ap.parse_args()
     game_cfg = json.load(open(os.path.join(HERE, 'game.json'), encoding='utf-8'))
@@ -109,6 +118,11 @@ def main():
     from game_files import game_files
     build['game_files'] = game_files(a.game, game_cfg.get('skip', []))
     print(f'game files: {len(build["game_files"])}, {sum(build["game_files"].values()):,} bytes')
+    if a.update:  # blur-nx (2026-11-18): the title update the player gives too (lib/update.js)
+        xexp = os.path.join(a.update, 'default.xexp')
+        files = {k: v for k, v in game_files(a.update).items() if k.lower() != 'default.xexp'}
+        build['update'] = {'xexp_sha256': sha256(open(xexp, 'rb').read()), 'files': files}
+        print(f'title update: default.xexp {build["update"]["xexp_sha256"][:16]}, {len(files)} other files')
 
     # the shaders: every container of the dump, in default.xex or in a record
     if game_cfg.get('shaders'):
@@ -150,7 +164,10 @@ def main():
         shutil.copyfile(a.pipeline_list, os.path.join(REL, 'pipeline_list.bin'))
         files.append({'path': 'pipeline_list.bin', 'source': 'pipeline_list.bin', 'with_cache': True})
     for spec in a.file:
-        src, _, name = spec.partition(':')
+        # <src>[:<name>]: the name after the last ':', unless that ':' is a Windows drive's (blur-nx, 2026-11-18)
+        src, sep, name = spec.rpartition(':')
+        if not sep or len(src) < 2 or '/' in name or os.sep in name:
+            src, name = spec, ''
         name = name or os.path.basename(src)
         shutil.copyfile(src, os.path.join(REL, name))
         files.append({'path': name, 'source': name})

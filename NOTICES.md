@@ -15,7 +15,8 @@ built on [renut-nx-webinstaller](https://github.com/ChanseyIsTheBest/renut-nx-we
 | [SPIRV-Cross](https://github.com/KhronosGroup/SPIRV-Cross) (commit `22b22f56`), unmodified | `wasm/spirv_cross.*` | Apache-2.0 |
 | [Pyodide](https://pyodide.org) 0.27.7 (CPython 3.12 for WebAssembly) and its numpy 2.0.2 wheel, unmodified | `vendor/pyodide/` | Pyodide: MPL-2.0; CPython: PSF License; numpy: BSD-3-Clause |
 | [LZ4](https://github.com/lz4/lz4) 1.10.0 by Yann Collet: `lz4.c`, `lz4.h`, `lz4hc.c`, `lz4hc.h`, unmodified | `wasm/src/lz4/`, `wasm/lz4.*` | BSD 2-Clause (`wasm/src/lz4/LICENSE`) |
-| [libmspack](https://www.cabextract.org.uk/libmspack/) by Stuart Caie: the LZX decoder (through katamari-nx-installer) | `wasm/lzx.*` | LGPL-2.1 |
+| [libmspack](https://www.cabextract.org.uk/libmspack/) by Stuart Caie: the LZX decoder (through katamari-nx-installer; `lzxd.c` from the base's SDK in `wasm/xexp`) | `wasm/lzx.*`, `wasm/xexp.*` | LGPL-2.1 |
+| The title update's reader and patch (`lib/stfs.js`, `lib/update.js`, `lib/xexp.js`, `wasm/src/xexp/xexp_wasm.c`), from blur-nx-installer (ChanseyIsTheBest, 2026-11-18); `lib/xexp.js` and `xexp_wasm.c` follow [Xenia](https://github.com/xenia-project/xenia)'s XexModule::ApplyPatch and LZX delta records as the base's SDK has them | `lib/`, `wasm/src/xexp/` | GPL-3.0 (Xenia's parts: BSD-3-Clause) |
 | [xxHash](https://github.com/Cyan4973/xxHash) and [{fmt}](https://github.com/fmtlib/fmt), in the translator | `wasm/renut_hlsl.*` | BSD-2-Clause; MIT |
 | [Emscripten](https://emscripten.org) 6.0.11 runtime and the musl libc it links | `wasm/*.mjs`, `wasm/*.wasm` | MIT and NCSA |
 
