@@ -17,6 +17,7 @@ built on [renut-nx-webinstaller](https://github.com/ChanseyIsTheBest/renut-nx-we
 | [LZ4](https://github.com/lz4/lz4) 1.10.0 by Yann Collet: `lz4.c`, `lz4.h`, `lz4hc.c`, `lz4hc.h`, unmodified | `wasm/src/lz4/`, `wasm/lz4.*` | BSD 2-Clause (`wasm/src/lz4/LICENSE`) |
 | [ZXC](https://github.com/hellobertrand/zxc) 0.15.0 by Bertrand Lebonnois: its library, unmodified but for `zxc_driver.c` left out (from rr6-nx-installer, with its `rr6_zxc.c` exports) | `wasm/src/zxc/`, `wasm/zxc.*` | BSD 3-Clause (`wasm/src/zxc/LICENSE`) |
 | [FFmpeg](https://ffmpeg.org) 4.4's WMV3 / VC-1 decoder (libavcodec and libavutil, configured with that decoder only; the copy in culdcept-nx's `sdk/thirdparty/FFmpeg`), with the `wmv3_wasm.c` exports (culdcept-nx-installer, 2026-11-20) | `wasm/src/wmv3/`, `wasm/wmv3.*` | LGPL-2.1-or-later |
+| [FFmpeg](https://ffmpeg.org) 4.4's xmaframes decoder (WMA Pro's; libavcodec and libavutil, configured with that decoder only; the copy in culdcept-nx's `sdk/thirdparty/FFmpeg`), with the `xma_wasm.c` exports and XMA frame walk (culdcept-nx-installer, 2026-11-20) | `wasm/src/xma/`, `wasm/xma.*` | LGPL-2.1-or-later |
 | [rapidhash](https://github.com/Nicoshev/rapidhash) by Nicolas De Carli, bundled with ZXC | `wasm/src/zxc/src/lib/vendors/rapidhash.h`, `wasm/zxc.*` | MIT (`wasm/src/zxc/THIRD_PARTY_NOTICES`) |
 | [libmspack](https://www.cabextract.org.uk/libmspack/) by Stuart Caie: the LZX decoder (through katamari-nx-installer; `lzxd.c` from the base's SDK in `wasm/xexp`) | `wasm/lzx.*`, `wasm/xexp.*` | LGPL-2.1 |
 | The title update's reader and patch (`lib/stfs.js`, `lib/update.js`, `lib/xexp.js`, `wasm/src/xexp/xexp_wasm.c`), from blur-nx-installer (ChanseyIsTheBest, 2026-11-18); `lib/xexp.js` and `xexp_wasm.c` follow [Xenia](https://github.com/xenia-project/xenia)'s XexModule::ApplyPatch and LZX delta records as the base's SDK has them | `lib/`, `wasm/src/xexp/` | GPL-3.0 (Xenia's parts: BSD-3-Clause) |
@@ -25,7 +26,8 @@ built on [renut-nx-webinstaller](https://github.com/ChanseyIsTheBest/renut-nx-we
 
 `wasm/renut_hlsl.*` is built by `wasm/src/translator/build_wasm_translator.sh`, `wasm/uam.*` by
 `wasm/src/uam/build_wasm_uam.sh` (both from the ultimate base's sources), `wasm/lz4.*` by `wasm/src/lz4/build.sh` and
-`wasm/zxc.*` by `wasm/src/zxc/build.sh` and `wasm/wmv3.*` by `wasm/src/wmv3/build.sh` (Emscripten 6.0.11).
+`wasm/zxc.*` by `wasm/src/zxc/build.sh`, `wasm/wmv3.*` by `wasm/src/wmv3/build.sh` and `wasm/xma.*` by
+`wasm/src/xma/build.sh` (Emscripten 6.0.11). The Opus encoder is the browser's own (WebCodecs): the page ships none.
 
 The licenses of the software in the NRO are listed in the port's repository, with its source code. The example's
 `icon.png` is Beautiful Katamari's artwork, © Bandai Namco Entertainment.

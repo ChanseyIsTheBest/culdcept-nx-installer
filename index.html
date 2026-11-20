@@ -102,12 +102,17 @@
       <span>Re-encode the movies to H.265 (recommended: about 1 GB of movies become about 0.45 GB, and the Switch's video
         hardware plays them). Needs a browser with an H.265 encoder (Chrome or Edge on a recent graphics card); without
         one, or unticked, the movies are copied as they are.</span></label>
+    <!-- culdcept-nx-installer (2026-11-20): the sounds' Opus re-encode (game.json "audio") -->
+    <label class="option" id="audio-row" hidden><input id="audio" type="checkbox" checked>
+      <span>Re-encode the music and sound effects to Opus (recommended: about 290 MB of them become about 170 MB; the
+        music at 128 kbit/s). Needs a browser with an Opus encoder (Chrome, Edge or Firefox); without one, or unticked,
+        they are copied as they are. The voices stay as they are.</span></label>
     <button id="create" class="primary" disabled>Create the zip</button>
     <!-- culdcept-nx-installer: no shaders made here (game.json "shaders": false); the game files packed by its "lz4" and
          "zxc" lists (2026-11-20) -->
     <p class="note">Your game's files are packed on all of this computer's cores, the archives with LZ4 and the effects with
-      ZXC (the game reads them as they were), and the movies re-encoded to H.265 (below): about 4.7 GB down to 2.7 GB.
-      The music is copied as it is: it is compressed already. The program carries the game's seven shaders itself (the Switch compiles them in
+      ZXC (the game reads them as they were), the movies re-encoded to H.265 and the music and effects to Opus (below):
+      about 4.7 GB down to 2.6 GB. The program carries the game's seven shaders itself (the Switch compiles them in
       about a second at the first start). The zip downloads while it is written.</p>
     <progress id="bar" max="1" value="0" hidden></progress>
     <div id="log" role="log" aria-live="polite"></div>

@@ -82,7 +82,7 @@ function startWorkers(script, count) {
     const w = new Worker(script, { type: 'module' });
     w.onerror = (e) => reject(new Error(`${script}: ${e.message}`));
     w.addEventListener('message', ({ data }) => {
-      if (data.ready) resolve({ w, version: data.version, zxcVersion: data.zxcVersion, hevc: data.hevc,
+      if (data.ready) resolve({ w, version: data.version, zxcVersion: data.zxcVersion, hevc: data.hevc, opus: data.opus,
                                 post: (m, t) => w.postMessage(m, t),
                                 onMessage: (cb) => w.addEventListener('message', ({ data: d }) => cb(d)) });
     }, { once: true });
@@ -93,7 +93,8 @@ function startWorkers(script, count) {
 async function tool(script, count, wrap) {
   const workers = await startWorkers(script, count);
   return { run: wrap(workerPool(workers)), version: workers[0].version, zxcVersion: workers[0].zxcVersion,
-           hevc: workers[0].hevc, size: workers.length, stop: () => workers.forEach((x) => x.w.terminate()) };
+           hevc: workers[0].hevc, opus: workers[0].opus, size: workers.length,
+           stop: () => workers.forEach((x) => x.w.terminate()) };
 }
 
 self.onmessage = async ({ data }) => {
@@ -120,12 +121,16 @@ self.onmessage = async ({ data }) => {
       // culdcept-nx-installer (2026-11-20): the movies' H.265 re-encode (movie_worker.js), one movie per worker
       startMovies: (n) => tool('./movie_worker.js', n, (pool) => (bytes, opts) =>
         pool.run({ bytes, ...opts }, [bytes.buffer])),
+      // culdcept-nx-installer (2026-11-20): the sounds' Opus re-encode (audio_worker.js), one sound file per job
+      startAudio: (n) => tool('./audio_worker.js', n, (pool) => (bytes, opts) =>
+        pool.run({ bytes, ...opts }, [bytes.buffer])),
     };
     const report = await buildPackage({
       game, manifest, files: gameFiles(data.entries), dlc: gameFiles(data.dlc || []), update: gameFiles(data.update || []),
       fetchRelease, tools, sink,
       compile: data.compile !== false,
       movies: data.movies !== false,
+      audio: data.audio !== false,
       events: {
         log: (text) => postMessage({ type: 'log', text }),
         progress: (fraction) => postMessage({ type: 'progress', fraction }),

@@ -43,7 +43,9 @@ def entry_sha(z, name):
 def check_lz4b(z, info, original):
     with z.open(info) as f:
         magic, version, block, size, count, _ = struct.unpack('<8sIIQII', f.read(32))
-        assert magic == b'RXLZ4BLK' and version == 1, 'header'
+        # culdcept-nx-installer (2026-11-20): version 2 is ZXC blocks (no ZXC decoder in Python: its header, index and
+        # size are checked here; test/pack_node.mjs checks ZXC's round trip)
+        assert magic == b'RXLZ4BLK' and version in (1, 2), 'header'
         assert size == os.path.getsize(original), f'holds {size} bytes, the original has {os.path.getsize(original)}'
         f.seek(info.file_size - 16)
         index_offset, end = struct.unpack('<Q8s', f.read(16))
@@ -51,6 +53,8 @@ def check_lz4b(z, info, original):
         f.seek(index_offset)
         sizes = struct.unpack(f'<{count}I', f.read(4 * count))
         assert 32 + sum(sizes) == index_offset, 'index'
+        if version == 2:
+            return size, info.file_size, count
         f.seek(32)
         with open(original, 'rb') as o:
             for i, stored in enumerate(sizes):
@@ -111,6 +115,11 @@ def main():
                 placed.add(entry)
             print(f'title update: {len(want)} files right (default.xexp in game_root/, {len(want) - 1} in update/)')
         count = packed_in = packed_out = 0
+        # culdcept-nx-installer (2026-11-20): game.json "movies" may be re-encoded (H.265 in the same ASF file) and
+        # "audio" may be NAME.xmo in place of NAME (lib/xmo.js; culdcept-nx's out/test_xmo.exe checks one deeply)
+        movie_res = [re.compile(f'^(?:{cfg["movies"]["match"]})$', re.I)] if cfg.get("movies") else []
+        audio_res = [re.compile(f'^(?:{cfg["audio"]["match"]})$', re.I)] if cfg.get("audio") else []
+        movies_in = movies_out = audio_files = audio_in = audio_out = 0
         for dirpath, _, files in os.walk(game):
             for f in sorted(files):
                 original = os.path.join(dirpath, f)
@@ -128,10 +137,32 @@ def main():
                     packed_in += size
                     packed_out += packed
                     print(f'{entry}.lz4b: {blocks} blocks equal {rel} ({packed / size * 100:.1f} %)')
+                elif any(r.match(rel) for r in audio_res) and entry + '.xmo' in names:
+                    if entry in names:
+                        raise SystemExit(f'FAIL: {rel} is in the zip as XMA and as .xmo')
+                    with z.open(entry + '.xmo') as x:
+                        head = x.read(64)
+                    size = os.path.getsize(original)
+                    if head[:8] != b'RXXMAOP1' or struct.unpack('<Q', head[16:24])[0] != size:
+                        raise SystemExit(f'FAIL: {entry}.xmo is not an .xmo of {rel}')
+                    audio_files += 1
+                    audio_in += size
+                    audio_out += z.getinfo(entry + '.xmo').file_size
                 elif entry_sha(z, entry) != file_sha(original):
+                    if any(r.match(rel) for r in movie_res):
+                        with z.open(entry) as m, open(original, 'rb') as o:
+                            if m.read(16) != o.read(16):
+                                raise SystemExit(f'FAIL: {entry} is not an ASF file like {rel}')
+                        movies_in += os.path.getsize(original)
+                        movies_out += z.getinfo(entry).file_size
+                        continue
                     raise SystemExit(f'FAIL: {entry} differs from {rel}')
         print(f'game_root: {count} files right' +
               (f'; packed {packed_in / 1048576:.0f} MB -> {packed_out / 1048576:.0f} MB' if packed_in else ''))
+        if movies_in:
+            print(f'movies re-encoded: {movies_in / 1048576:.0f} MB -> {movies_out / 1048576:.0f} MB')
+        if audio_files:
+            print(f'audio as .xmo: {audio_files} files, {audio_in / 1048576:.1f} MB -> {audio_out / 1048576:.1f} MB')
     print('OK')
 
 

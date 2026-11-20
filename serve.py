@@ -146,4 +146,8 @@ if __name__ == '__main__':
     port = int(args[0]) if args else 8193
     root = args[1] if len(args) > 1 else '.'
     handler = functools.partial(Handler, directory=root)
+    # culdcept-nx-installer (2026-11-20): a deeper listen queue than socketserver's 5. The page's full test reads the
+    # game files with many range requests at once (the packers, and the movie and audio jobs ahead of the zip) while it
+    # writes the zip here: with 5, Windows refused a write's connection (net::ERR_CONNECTION_REFUSED) mid-run.
+    http.server.ThreadingHTTPServer.request_queue_size = 128
     http.server.ThreadingHTTPServer(('127.0.0.1', port), handler).serve_forever()

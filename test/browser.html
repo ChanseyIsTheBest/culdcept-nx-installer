@@ -57,8 +57,17 @@ const flush = () => {
   written += bufferedBytes;
   buffered = []; bufferedBytes = 0;
   writes = writes.then(async () => {
-    const r = await fetch(`/_test_write?offset=${offset}`, { method: 'POST', body });
-    if (!r.ok) throw new Error(`write at ${offset}: HTTP ${r.status}`);
+    // culdcept-nx-installer (2026-11-20): a write the network drops (a refused connection) is tried again
+    for (let attempt = 0; ; ++attempt) {
+      try {
+        const r = await fetch(`/_test_write?offset=${offset}`, { method: 'POST', body });
+        if (!r.ok) throw new Error(`write at ${offset}: HTTP ${r.status}`);
+        break;
+      } catch (e) {
+        if (attempt >= 4 || /HTTP/.test(e.message)) throw e;
+        await new Promise((res) => setTimeout(res, 500 * (attempt + 1)));
+      }
+    }
   });
   writes.catch((e) => { log(`write failed: ${e.message}`, 'bad'); finished(false); });
   return writes;
@@ -93,7 +102,8 @@ worker.onmessage = ({ data }) => {
 worker.onerror = (e) => log(`worker error: ${e.message}`, 'bad');
 const compile = new URLSearchParams(location.search).get('compile') !== '0';
 const movies = new URLSearchParams(location.search).get('movies') !== '0';  // culdcept-nx-installer: H.265 re-encode
-worker.postMessage({ entries, dlc: [], update, compile, movies, port: channel.port1 }, [channel.port1]);
+const audio = new URLSearchParams(location.search).get('audio') !== '0';  // culdcept-nx-installer: Opus re-encode
+worker.postMessage({ entries, dlc: [], update, compile, movies, audio, port: channel.port1 }, [channel.port1]);
 const ok = await done;
 await writes;
 log(ok ? `TEST ZIP WRITTEN: ${written} bytes in ${((performance.now() - started) / 1000).toFixed(0)} s` : 'TEST FAILED', ok ? 'good' : 'bad');

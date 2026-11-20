@@ -7,7 +7,12 @@ import { canEncodeHevc, reencodeMovie } from './lib/movies.js';
 const wmv3 = await createWmv3Module({ print: () => {}, printErr: () => {} });
 const hevc = await canEncodeHevc();
 
-self.onmessage = async ({ data }) => {
+// One movie at a time: the pool (lib/pool.js) posts a worker its next job while one runs, and this handler awaits the
+// encoder, so a second message would start while the first is decoding and reopen the one WMV3 decoder under it (the
+// full test of 2026-11-20: 34 of 39 movies kept as WMV, "frame N gave no picture"). The jobs wait in a chain.
+let chain = Promise.resolve();
+self.onmessage = ({ data }) => { chain = chain.then(() => job(data)); };
+async function job(data) {
   const { id, bytes, fraction, gop } = data;
   let r;
   try {
@@ -16,5 +21,5 @@ self.onmessage = async ({ data }) => {
     r = { bytes: null, why: e.message || String(e) };
   }
   self.postMessage({ id, bytes: r.bytes, frames: r.frames, kbps: r.kbps, why: r.why }, r.bytes ? [r.bytes.buffer] : []);
-};
+}
 self.postMessage({ ready: true, version: wmv3._wmv3_version(), hevc });

@@ -15,6 +15,26 @@
     "fraction": 0.35,
     "gop": 120
   },
+  "audio": {
+    "match": "data/SOUND/.*\\.xma",
+    "bitrates": [
+      {
+        "match": "data/SOUND/bgm_.*",
+        "stereo": 128000,
+        "mono": 64000
+      },
+      {
+        "match": "data/SOUND/se.*",
+        "stereo": 96000,
+        "mono": 48000
+      },
+      {
+        "match": ".*",
+        "stereo": 64000,
+        "mono": 32000
+      }
+    ]
+  },
   "skip": [
     "\\$SystemUpdate/.*"
   ],

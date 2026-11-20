@@ -29,7 +29,21 @@ renut_nx_ultimate_installer (2ce44cf) with its own `game.json`, colours, `icon.p
     445 MB (tools/hevc_movie.py on a PC, the same rule: 443.5 MB; PSNR 41.8 dB on a narration, 52 dB on the intro made
     in a browser). A browser without an H.265 encoder (Firefox, an older graphics card), or the option unticked, keeps
     the WMVs; the port plays both.
-  - In all 4,707.6 MB -> 3,309.1 MB packed, about 2,684 MB with the movies in H.265. Both codecs measured on every file (2026-11-20): LZ4 alone would give 3,333 MB,
+  - **The music and effects re-encoded to Opus** (2026-11-20, the user: "Yeah I think I want to rencode the audio the
+    to opus", "Lets go with 128k"): the page's option, ticked by default, with game.json's `audio` ({ match, bitrates }:
+    music 128 kbit/s stereo, effects 96 / 48 kbit/s stereo / mono). Each 48 kHz XMA file's frames are walked as the
+    port's XMA emulation walks them and decoded in order by FFmpeg's xmaframes decoder in WebAssembly (`wasm/xma`, the
+    port's own decoder), encoded by the browser's Opus encoder (WebCodecs, 20 ms packets) and written as NAME.xmo
+    (`lib/xmo.js`, on `audio_worker.js` workers): the XMA file's header, packet headers, frame table and trailer, and
+    the Opus. The port synthesizes the XMA file from it, with a tag in each packet, and plays each frame's 512 samples
+    from the Opus (culdcept-nx's `rex/filesystem/xmo.h`). The 44.1 kHz voice clips stay XMA (Opus is 48 kHz only), and
+    so do the short effects that are smaller as XMA. In the page (Chrome, the full test of 2026-11-20): 634 of 2,101
+    sound files, 290.2 MB -> 171.2 MB (test/audio_node.mjs with ffmpeg's libopus: 619 files, 178.5 MB); every frame
+    lines up with the XMA decode at offset 0. A browser without an Opus encoder, or the option unticked, keeps the XMA.
+    The movie and audio workers take one job at a time (each holds one WebAssembly decoder; the pool posts a busy worker
+    its next job), and the page reads their files a few per worker ahead of the zip.
+  - In all 4,707.6 MB -> 3,309.1 MB packed; with the movies in H.265 and the audio in Opus, the page's whole zip is
+    2,576 MB (the full test in Chrome, 2026-11-20: 545 s on 16 threads, the movies 1,069 -> 414 MB). Both codecs measured on every file (2026-11-20): LZ4 alone would give 3,333 MB,
     ZXC alone 3,354 MB; ZXC wins on DATA04 (705 against 737 MB) and the effects, LZ4 on the other archives (DATA06 370
     against 410 MB). The packed files need culdcept-nx with rr6-nx's reader (2026-11-20 on: ZXC is version 2 of the
     `.lz4b` container); `test/pack_node.mjs` makes the same folder on a PC for test runs.
