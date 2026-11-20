@@ -25,7 +25,13 @@ renut_nx_ultimate_installer (2ce44cf) with its own `game.json`, colours, `icon.p
     (`wasm/wmv3`), encoded by the browser's H.265 encoder (WebCodecs, the computer's video hardware) at 35 % of the
     movie's own video bitrate with a keyframe every 120 frames, and written back into the same ASF file frame for frame
     (`lib/asf.js`: the header, the audio, the times and the payload extensions kept), on `movie_worker.js` workers. The
-    port plays such a movie on the Switch's video hardware (culdcept-nx's nxvideo). The 39 movies: 1,068.8 MB -> about
+    packets are laid out as the originals' muxer lays them out (2026-11-20, the user on the console: "audio doesn't
+    play during the video and the video has major stutters"): each audio object whole in one packet (one that does not
+    fit waits for the next packet), each packet's send time the original time of the bytes it starts with, and its
+    duration the time to the next packet. The game's player lost a split audio object's sound and paced the movie by
+    the packets' times: the first writer's movies played slowly and without sound. tools/hevc_movie.py in culdcept-nx
+    writes the same bytes (test/movies_node.mjs compares them). The port plays such a movie on the Switch's video
+    hardware (culdcept-nx's nxvideo). The 39 movies: 1,068.8 MB -> about
     445 MB (tools/hevc_movie.py on a PC, the same rule: 443.5 MB; PSNR 41.8 dB on a narration, 52 dB on the intro made
     in a browser). A browser without an H.265 encoder (Firefox, an older graphics card), or the option unticked, keeps
     the WMVs; the port plays both.
