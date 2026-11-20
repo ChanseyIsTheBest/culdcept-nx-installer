@@ -10,6 +10,11 @@
     "data/DATA04\\.RSP",
     ".*\\.RS[AELMT]"
   ],
+  "movies": {
+    "match": "data/MOVIE/.*\\.wmv",
+    "fraction": 0.35,
+    "gop": 120
+  },
   "skip": [
     "\\$SystemUpdate/.*"
   ],

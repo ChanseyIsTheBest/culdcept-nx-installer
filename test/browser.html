@@ -92,7 +92,8 @@ worker.onmessage = ({ data }) => {
 };
 worker.onerror = (e) => log(`worker error: ${e.message}`, 'bad');
 const compile = new URLSearchParams(location.search).get('compile') !== '0';
-worker.postMessage({ entries, dlc: [], update, compile, port: channel.port1 }, [channel.port1]);
+const movies = new URLSearchParams(location.search).get('movies') !== '0';  // culdcept-nx-installer: H.265 re-encode
+worker.postMessage({ entries, dlc: [], update, compile, movies, port: channel.port1 }, [channel.port1]);
 const ok = await done;
 await writes;
 log(ok ? `TEST ZIP WRITTEN: ${written} bytes in ${((performance.now() - started) / 1000).toFixed(0)} s` : 'TEST FAILED', ok ? 'good' : 'bad');

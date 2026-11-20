@@ -13,7 +13,7 @@ const folderInput = $('folder'), isoInput = $('iso'), chosen = $('chosen'), dete
 const dlcInput = $('dlc'), dlcFolderInput = $('dlc-folder'), dlcChosen = $('dlc-chosen'), dlcDetected = $('dlc-detected');
 const updateInput = $('update'), updateFolderInput = $('update-folder'), updateChosen = $('update-chosen');
 const updateDetected = $('update-detected');
-const create = $('create'), compileBox = $('compile'), bar = $('bar'), logBox = $('log');
+const create = $('create'), compileBox = $('compile'), moviesBox = $('movies'), bar = $('bar'), logBox = $('log');
 // no-cache (blur-nx-installer, 2026-11-19): the browser asks the server whether its copy is current, so a copy it
 // cached (GitHub Pages allows 10 minutes) never meets a newer release
 const manifest = fetch('./release/manifest.json', { cache: 'no-cache' }).then((r) => r.json());
@@ -36,6 +36,7 @@ game.then((g) => {
   let n = 0;
   for (const el of document.querySelectorAll('section:not([hidden]) h2 .n')) el.textContent = `${++n}. `;
   $('compile-row').hidden = !g.shaders;
+  $('movies-row').hidden = !g.movies;  // culdcept-nx-installer (2026-11-20): the movies' H.265 re-encode
   create.textContent = `Create ${g.package}.zip`;
   manifest.then((m) => { $('version').textContent = `version ${m.version}`; });
 });
@@ -330,5 +331,5 @@ create.addEventListener('click', async () => {
     log(`Error: ${event.message}`, true);
     finish();
   };
-  worker.postMessage({ entries, dlc, update: update || [], compile: compileBox.checked, port: channel.port1 }, [channel.port1]);
+  worker.postMessage({ entries, dlc, update: update || [], compile: compileBox.checked, movies: moviesBox.checked, port: channel.port1 }, [channel.port1]);
 });

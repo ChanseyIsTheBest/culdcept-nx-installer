@@ -19,7 +19,17 @@ renut_nx_ultimate_installer (2ce44cf) with its own `game.json`, colours, `icon.p
   - **LZ4 HC 9, 256 KB blocks**: every other file but `default.xex` (the NRO loads it itself), the movies and the
     audio: 140 files, 1,505 MB -> 884 MB.
   - **As they are**: `default.xex`, `data/MOVIE` (WMV) and `data/SOUND` (XMA): both codecs leave them at 99 %.
-  - In all 4,707.6 MB -> 3,309.1 MB. Both codecs measured on every file (2026-11-20): LZ4 alone would give 3,333 MB,
+  - **The movies re-encoded to H.265** (2026-11-20, the user: "an option in thr web browser on by default to rencode
+    videos ... we can leave wmv as fallback"): the page's option, ticked by default, with game.json's `movies`
+    ({ match, fraction, gop }). Each WMV movie's frames are decoded by FFmpeg's WMV3 decoder in WebAssembly
+    (`wasm/wmv3`), encoded by the browser's H.265 encoder (WebCodecs, the computer's video hardware) at 35 % of the
+    movie's own video bitrate with a keyframe every 120 frames, and written back into the same ASF file frame for frame
+    (`lib/asf.js`: the header, the audio, the times and the payload extensions kept), on `movie_worker.js` workers. The
+    port plays such a movie on the Switch's video hardware (culdcept-nx's nxvideo). The 39 movies: 1,068.8 MB -> about
+    445 MB (tools/hevc_movie.py on a PC, the same rule: 443.5 MB; PSNR 41.8 dB on a narration, 52 dB on the intro made
+    in a browser). A browser without an H.265 encoder (Firefox, an older graphics card), or the option unticked, keeps
+    the WMVs; the port plays both.
+  - In all 4,707.6 MB -> 3,309.1 MB packed, about 2,684 MB with the movies in H.265. Both codecs measured on every file (2026-11-20): LZ4 alone would give 3,333 MB,
     ZXC alone 3,354 MB; ZXC wins on DATA04 (705 against 737 MB) and the effects, LZ4 on the other archives (DATA06 370
     against 410 MB). The packed files need culdcept-nx with rr6-nx's reader (2026-11-20 on: ZXC is version 2 of the
     `.lz4b` container); `test/pack_node.mjs` makes the same folder on a PC for test runs.
