@@ -1,7 +1,7 @@
 # culdcept-nx-installer
 
 The web installer of culdcept-nx (Culdcept Saga, Xbox 360 title 424107DD, on the Switch), a copy of
-renut_nx_ultimate_installer (2ce44cf) with its own `game.json`, colours, `icon.png` (a plain placeholder) and `release/`
+renut_nx_ultimate_installer (2ce44cf) with its own `game.json`, colours, `icon.png` (the user's Culdcept Saga image, as the NRO's icon) and `release/`
 (made by `tools/make_release.py` from culdcept-nx's build). What differs from the template:
 
 - **`"shaders": false`: the NRO carries the game's seven shaders itself** (the everyday build, not
