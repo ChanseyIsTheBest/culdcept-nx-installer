@@ -8,16 +8,17 @@
   <link rel="icon" href="./icon.png">
   <style>
     /* renut_nx_ultimate_installer: a port changes the colours here, game.json and icon.png */
-    :root { color-scheme: dark; --bg: #0b1020; --panel: rgba(20, 28, 52, .86); --inset: rgba(6, 10, 24, .8); --text: #eef2ff;
-      --muted: #aab4d4; --accent: #ffb547; --sky: #6aa8ff; --primary: #3f6fe0; --good: #5fd27f; --bad: #ff6b6b;
+    /* culdcept-nx-installer: parchment gold on a dark umber (the game's menus) */
+    :root { color-scheme: dark; --bg: #140d08; --panel: rgba(40, 27, 18, .88); --inset: rgba(18, 11, 6, .82); --text: #f6eee2;
+      --muted: #cbb9a0; --accent: #e8b75a; --sky: #d9824a; --primary: #a8552a; --good: #5fd27f; --bad: #ff6b6b;
       --line: rgba(255, 255, 255, .12); }
     * { box-sizing: border-box; }
     [hidden] { display: none !important; }
     body { margin: 0; min-height: 100vh; color: var(--text); background: var(--bg);
       font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
     body::before { content: ""; position: fixed; inset: 0; z-index: -1;
-      background: radial-gradient(60% 45% at 85% 10%, rgba(255, 181, 71, .16), transparent 70%),
-                  radial-gradient(70% 55% at 10% 20%, rgba(106, 168, 255, .24), transparent 70%), var(--bg); }
+      background: radial-gradient(60% 45% at 85% 10%, rgba(232, 183, 90, .16), transparent 70%),
+                  radial-gradient(70% 55% at 10% 20%, rgba(217, 130, 74, .20), transparent 70%), var(--bg); }
     main { max-width: 860px; margin: 0 auto; padding: 28px 16px; display: flex; flex-direction: column; gap: 14px; }
     header { text-align: center; }
     h1 { font-size: 2.2rem; font-weight: 900; margin: 0 0 12px; overflow-wrap: anywhere; }
@@ -97,8 +98,10 @@
       <span>Compile the shaders for the Switch here (recommended: the game starts and plays without compile stutters).
         Unticked, the Switch compiles each one the first time the game draws with it.</span></label>
     <button id="create" class="primary" disabled>Create the zip</button>
-    <p class="note">The shaders are made from your game's own files on all of this computer's cores, and the large archives
-      are packed with LZ4 (the game reads them as they were). The zip downloads while it is written.</p>
+    <!-- culdcept-nx-installer: no shaders made here and no LZ4 packing (game.json "shaders": false, "lz4": []) -->
+    <p class="note">Your game's files go into the package as they are, next to the program (which carries the game's seven
+      shaders itself: the Switch compiles them in about a second at the first start). The zip downloads while it is
+      written.</p>
     <progress id="bar" max="1" value="0" hidden></progress>
     <div id="log" role="log" aria-live="polite"></div>
   </section>
@@ -115,8 +118,8 @@
     </ol>
   </section>
   <footer>
-    <p>Made with renut_nx_ultimate_installer (GPL-3.0), from kameo-nx-installer, rr6-nx-installer and
-      katamari-nx-installer. See NOTICES.md.</p>
+    <p>culdcept-nx-installer, made with renut_nx_ultimate_installer (GPL-3.0), from kameo-nx-installer,
+      rr6-nx-installer and katamari-nx-installer. See NOTICES.md.</p>
     <p data-text="footer"></p>
   </footer>
 </main>

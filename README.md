@@ -1,3 +1,27 @@
+# culdcept-nx-installer
+
+The web installer of culdcept-nx (Culdcept Saga, Xbox 360 title 424107DD, on the Switch), a copy of
+renut_nx_ultimate_installer (2ce44cf) with its own `game.json`, colours, `icon.png` (a plain placeholder) and `release/`
+(made by `tools/make_release.py` from culdcept-nx's build). What differs from the template:
+
+- **`"shaders": false`: the NRO carries the game's seven shaders itself** (the everyday build, not
+  `-DBANJO_RENUT_RELEASE_SHADERS=ON`). Culdcept Saga compiles two of them at run time from `data/shader.fx` with D3DX
+  (no game file holds them), two more are made at run time from parts, and the three in `default.xex` are version 0x10
+  containers (flags `0x102A10xx`, XDK 2.0.3424), which this page's scanner (`\x10\x2a\x11`) and its WebAssembly
+  translator (built from the base, without culdcept-nx's `container_10.h`) do not read. Seven shaders, 16 KB of GLSL:
+  the console compiles them in about a second at the first start. The page makes no shader file and no DKSH cache.
+- **No DLC step** (`"dlc": false`) and no title update: the game needs neither.
+- **No LZ4 packing** (`"lz4": []`): the game's large archives (`data/DATA00-06.RSP`, 2.5 GB) are packed by the game
+  already (RSLib's own format); their LZ4 gain was not measured this session, so the page copies them as they are.
+- **Checked** (2026-11-19): `release/` made by `tools/make_release.py` (the NRO of culdcept-nx f67e880d, 5,860 game files
+  in the manifest); `node test/game_check_node.mjs <game folder>`: every case passes but "without d02.dat-d05.dat it is
+  refused", which is Beautiful Katamari's own case (it names Katamari's archives); the page served by `serve.py` shows
+  Culdcept's texts. A whole package (`test/full_node.mjs`) was not made (a 4.9 GB zip of game data).
+- Nothing here is published: the user publishes it (GitHub Pages) if they choose. The NRO carries translated shaders
+  of the game (see above): that is the user's decision before publishing.
+
+Everything else below is the template's text.
+
 # renut_nx_ultimate_installer
 
 The web installer for ports made from the ultimate base ([renut_nx_ultimate_base](https://github.com/ChanseyIsTheBest/renut_nx_ultimate_base)).
@@ -70,18 +94,6 @@ The example in this repository is Beautiful Katamari, the base's own game: the b
    python test/check_zip.py <out.zip> <game folder>
    ```
 
-   The page fetches the release files as GitHub Pages serves them, which is what git stores, not the working copy
-   these tests read. `.gitattributes` keeps `release/` byte for byte (`release/** -text`: with `core.autocrlf` git
-   would store a text file such as a `--file` README with other line ends than make_release.py hashed, and the page
-   would refuse it, as blur-nx-installer's did). So test the published bytes too: after the commit, and again on the
-   page after the push,
-
-   ```bash
-   python test/check_release.py [https://<user>.github.io/<repo>/]
-   ```
-
-   checks every release file the page fetches against the manifest (with no URL, as git stores it at `HEAD`).
-
 5. **The tools**: when the port's shader tools differ from the base's, copy them in with
    `python tools/sync_from_base.py --base <port root>`, and rebuild `wasm/renut_hlsl` and `wasm/uam` from the port
    (`BANJO_NX=<port root> bash wasm/src/translator/build_wasm_translator.sh`, the same for
@@ -124,18 +136,6 @@ python serve.py 8193 . --test-files <game folder> --test-out test/out_zip/packag
 
 and open http://127.0.0.1:8193/test/browser.html (`?compile=0` leaves the DKSH cache out), then
 `python test/check_zip.py test/out_zip/package.zip <game folder>`.
-
-Run it in Chrome (or Edge, or Firefox), not in an embedded browser that cannot start a worker from inside a worker
-(the Claude app's browser pane fails at "./glsl_worker.js: undefined": the GLSL, uam and LZ4 workers are started by
-`worker.js`). A headless Chrome with a scratch profile works (blur-nx-installer, 2026-11-19); the page sets its title
-to `DONE` or `FAILED`, which `http://127.0.0.1:9333/json` shows:
-
-```bash
-chrome --headless=new --remote-debugging-port=9333 --user-data-dir=<scratch folder> --no-first-run --disable-extensions http://127.0.0.1:8193/test/browser.html
-```
-
-`python test/check_release.py` checks the release files as the commit holds them, and with a URL (serve.py's, or the
-published page) as that serves them: test the published bytes, not the working copy.
 
 Outputs of the tests (zips, shader files) are game data: never commit or share them.
 
