@@ -12,6 +12,7 @@ import { availableParallelism } from 'node:os';
 import { Worker } from 'node:worker_threads';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildPackage, findBuild } from '../lib/install.js';
+import { CODECS } from '../lib/lz4b.js';
 import { updateFromPackage } from '../lib/update.js';
 import { glslMaker, uamCompile, workerPool } from '../lib/pool.js';
 
@@ -53,9 +54,11 @@ async function tool(script, count, wrap) {
   const workers = await Promise.all(Array.from({ length: count }, async () => {
     const w = new Worker(path.join(here, script));
     const ready = await new Promise((resolve, reject) => { w.once('message', resolve); w.once('error', reject); });
-    return { post: (m, t) => w.postMessage(m, t), onMessage: (cb) => w.on('message', cb), w, version: ready.version };
+    return { post: (m, t) => w.postMessage(m, t), onMessage: (cb) => w.on('message', cb), w, version: ready.version,
+             zxcVersion: ready.zxcVersion };
   }));
-  return { run: wrap(workerPool(workers)), version: workers[0].version, stop: () => workers.forEach((x) => x.w.terminate()) };
+  return { run: wrap(workerPool(workers)), version: workers[0].version, zxcVersion: workers[0].zxcVersion,
+           stop: () => workers.forEach((x) => x.w.terminate()) };
 }
 
 const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
@@ -73,8 +76,10 @@ const tools = {
   xexp: game.shaders && game.update ? await (await imp('xexp.mjs'))(quiet()) : null,
   startGlsl: (n) => tool('glsl_worker_node.mjs', n, glslMaker),
   startUam: (n) => tool('uam_worker_node.mjs', n, uamCompile),
-  startLz4: (n) => tool('lz4_worker_node.mjs', n, (pool) => (bytes, level) =>
-    pool.run({ bytes, level }, [bytes.buffer]).then((r) => r.bytes)),
+  // culdcept-nx-installer (2026-11-20): LZ4 and ZXC, as the page's pack_worker.js
+  startPack: (n) => tool('pack_worker_node.mjs', n, (pool) => (bytes, codec) =>
+    pool.run({ bytes, codec, level: CODECS[codec].level, block: CODECS[codec].block }, [bytes.buffer])
+      .then((r) => r.bytes)),
 };
 const fetchRelease = async (name, hash) => {
   const bytes = new Uint8Array(fs.readFileSync(path.join(root, 'release', name)));

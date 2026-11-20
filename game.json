@@ -3,9 +3,22 @@
   "package": "culdcept-nx",
   "nro": "culdcept-nx.nro",
   "shaders": false,
-  "lz4": [],
-  "skip": ["\\$SystemUpdate/.*"],
-  "needs": ["data/DATA0[0-6]\\.RSP", "data/shader\\.fx", "eeprev/.*", "layout/.*"],
+  "lz4": [
+    "(?!default\\.xex$|data/MOVIE/|data/SOUND/).*"
+  ],
+  "zxc": [
+    "data/DATA04\\.RSP",
+    ".*\\.RS[AELMT]"
+  ],
+  "skip": [
+    "\\$SystemUpdate/.*"
+  ],
+  "needs": [
+    "data/DATA0[0-6]\\.RSP",
+    "data/shader\\.fx",
+    "eeprev/.*",
+    "layout/.*"
+  ],
   "dlc": false,
   "texts": {
     "game": "Your Xbox 360 disc of Culdcept Saga as an <code>.iso</code>, or the folder it was extracted to (with <code>default.xex</code>, <code>data/</code>, <code>eeprev/</code> and <code>layout/</code>).",

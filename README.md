@@ -11,8 +11,18 @@ renut_nx_ultimate_installer (2ce44cf) with its own `game.json`, colours, `icon.p
   translator (built from the base, without culdcept-nx's `container_10.h`) do not read. Seven shaders, 16 KB of GLSL:
   the console compiles them in about a second at the first start. The page makes no shader file and no DKSH cache.
 - **No DLC step** (`"dlc": false`) and no title update: the game needs neither.
-- **No LZ4 packing** (`"lz4": []`): the game's large archives (`data/DATA00-06.RSP`, 2.5 GB) are packed by the game
-  already (RSLib's own format); their LZ4 gain was not measured this session, so the page copies them as they are.
+- **Packing** (2026-11-20, the user: "Just L4Z compress all files besides data04 rsp and effects which can be zxc
+  compressed dont bother compressing movies or audio no navings therr"), by `game.json`'s `lz4` and `zxc` (the `zxc`
+  list is this copy's addition to the template, with rr6-nx-installer's ZXC; see "ZXC packing" below):
+  - **ZXC 7, 512 KB blocks**: `data/DATA04.RSP` and the effect, model and layout files (`.rse .rst .rsa .rsm .rsl` in
+    `data/EFFECT`, `eeprev` and `layout`): 3,576 files, 1,768 MB -> 991 MB.
+  - **LZ4 HC 9, 256 KB blocks**: every other file but `default.xex` (the NRO loads it itself), the movies and the
+    audio: 140 files, 1,505 MB -> 884 MB.
+  - **As they are**: `default.xex`, `data/MOVIE` (WMV) and `data/SOUND` (XMA): both codecs leave them at 99 %.
+  - In all 4,707.6 MB -> 3,309.1 MB. Both codecs measured on every file (2026-11-20): LZ4 alone would give 3,333 MB,
+    ZXC alone 3,354 MB; ZXC wins on DATA04 (705 against 737 MB) and the effects, LZ4 on the other archives (DATA06 370
+    against 410 MB). The packed files need culdcept-nx with rr6-nx's reader (2026-11-20 on: ZXC is version 2 of the
+    `.lz4b` container); `test/pack_node.mjs` makes the same folder on a PC for test runs.
 - **Checked** (2026-11-19): `release/` made by `tools/make_release.py` (the NRO of culdcept-nx f67e880d, 5,860 game files
   in the manifest); `node test/game_check_node.mjs <game folder>`: every case passes but "without d02.dat-d05.dat it is
   refused", which is Beautiful Katamari's own case (it names Katamari's archives); the page served by `serve.py` shows
@@ -34,6 +44,10 @@ on GitHub Pages. The page makes the whole Switch package from the player's own c
   `deko3d_shaders.bin`, so the game starts with no compile stutters.
 - **LZ4 packing** of the large archives `game.json` names: LZ4 HC level 9 in 256 KB blocks, as `NAME.lz4b`, which the
   base's SDK reads as `NAME` (port 61). Beautiful Katamari's archives go from 2.1 GB to 0.9 GB.
+- **ZXC packing** (culdcept-nx-installer, 2026-11-20, from rr6-nx-installer) of the files `game.json`'s `zxc` names:
+  ZXC 0.15.0 level 7 in 512 KB blocks, the same `NAME.lz4b` container (version 2), which needs a port with rr6-nx's
+  reader (`sdk/src/filesystem/lz4_blocks.cpp` with `sdk/thirdparty/zxc`: culdcept-nx has it). ZXC packs smaller than
+  LZ4 and decodes slower (~200 against ~590 MB/s on the console, rr6-nx's runs): for files read while they play.
 - **The zip**, streamed to a download as it is written (it can be bigger than the browser's memory).
 
 The example in this repository is Beautiful Katamari, the base's own game: the base's NRO built with
@@ -43,7 +57,8 @@ The example in this repository is Beautiful Katamari, the base's own game: the b
 
 1. **`game.json`**: the game's title, the port's folder on the SD card (`package`: `switch/<package>/`), the NRO's name,
    whether the page makes the shaders (`shaders`), which files are packed with LZ4 (`lz4`, case-insensitive regular
-   expressions on paths in the game folder), which are left out (`skip`), which must be there (`needs`), which may be
+   expressions on paths in the game folder) and which with ZXC (`zxc`, the same; a file both name is ZXC's), which
+   are left out (`skip`), which must be there (`needs`), which may be
    absent from a player's copy (`optional`; see step 4), whether it takes DLC packages (`dlc`, copied whole to
    `switch/<package>/dlc/`, which the base installs at the first start), whether the port is recompiled from a title
    update's code (`update`, below), and the page's texts.
@@ -116,7 +131,7 @@ change both sides together.
 | `lib/build.js`, `lib/chain.js`, `lib/glsl_job.js`, `glsl_worker.js` | the translator and the GLSL chain on worker threads |
 | `lib/package.js` | `deko3d_glsl.bin` (version 2: the GLSL and the shader table's numbers) |
 | `lib/variants.js`, `lib/uam.js`, `uam_worker.js` | the variants and the DKSH cache (`deko3d_shaders.bin`) |
-| `lib/lz4b.js`, `lz4_worker.js` | the LZ4 block files (`wasm/lz4`: LZ4 1.10.0 HC) |
+| `lib/lz4b.js`, `pack_worker.js` | the block files (`wasm/lz4`: LZ4 1.10.0 HC; `wasm/zxc`: ZXC 0.15.0), one worker for both |
 | `lib/zip.js`, `sw.js` | the zip writer and the download stream |
 | `py/` | the base's Python shader tools, unchanged (`tools/sync_from_base.py`) |
 | `release/` | the NRO, `shader_common.h`, `variants.txt`, `pipeline_list.bin`, `manifest.json` |

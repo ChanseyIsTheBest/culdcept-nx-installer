@@ -98,10 +98,12 @@
       <span>Compile the shaders for the Switch here (recommended: the game starts and plays without compile stutters).
         Unticked, the Switch compiles each one the first time the game draws with it.</span></label>
     <button id="create" class="primary" disabled>Create the zip</button>
-    <!-- culdcept-nx-installer: no shaders made here and no LZ4 packing (game.json "shaders": false, "lz4": []) -->
-    <p class="note">Your game's files go into the package as they are, next to the program (which carries the game's seven
-      shaders itself: the Switch compiles them in about a second at the first start). The zip downloads while it is
-      written.</p>
+    <!-- culdcept-nx-installer: no shaders made here (game.json "shaders": false); the game files packed by its "lz4" and
+         "zxc" lists (2026-11-20) -->
+    <p class="note">Your game's files are packed on all of this computer's cores, the archives with LZ4 and the effects with
+      ZXC (about 4.7 GB down to 3.3 GB; the game reads them as they were). The movies and the music are copied as they
+      are: they are compressed already. The program carries the game's seven shaders itself (the Switch compiles them in
+      about a second at the first start). The zip downloads while it is written.</p>
     <progress id="bar" max="1" value="0" hidden></progress>
     <div id="log" role="log" aria-live="polite"></div>
   </section>
