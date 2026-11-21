@@ -4,12 +4,17 @@ The web installer of culdcept-nx (Culdcept Saga, Xbox 360 title 424107DD, on the
 renut_nx_ultimate_installer (2ce44cf) with its own `game.json`, colours, `icon.png` (the user's Culdcept Saga image, as the NRO's icon) and `release/`
 (made by `tools/make_release.py` from culdcept-nx's build). What differs from the template:
 
-- **`"shaders": false`: the NRO carries the game's seven shaders itself** (the everyday build, not
-  `-DBANJO_RENUT_RELEASE_SHADERS=ON`). Culdcept Saga compiles two of them at run time from `data/shader.fx` with D3DX
-  (no game file holds them), two more are made at run time from parts, and the three in `default.xex` are version 0x10
-  containers (flags `0x102A10xx`, XDK 2.0.3424), which this page's scanner (`\x10\x2a\x11`) and its WebAssembly
-  translator (built from the base, without culdcept-nx's `container_10.h`) do not read. Seven shaders, 16 KB of GLSL:
-  the console compiles them in about a second at the first start. The page makes no shader file and no DKSH cache.
+- **The shaders (2026-11-21, the user: "look at the ultimate base one"): the page makes the three in `default.xex`, the
+  NRO carries the four the game makes at run time** (banjo-nx's distribution build). Culdcept Saga compiles two of its
+  seven at run time from `data/shader.fx` with D3DX and makes two more from parts: no game file holds those, so the
+  NRO keeps them (culdcept-nx's `tools/renut_release_shaders.py --keep-runtime`, built with
+  `-DBANJO_RENUT_RELEASE_SHADERS=ON`: their GLSL and their four entries of the shader table). The three in
+  `default.xex` are version 0x10 containers (flags `0x102A10xx`, XDK 2.0.3424): `lib/sources.js` finds them and the
+  translator (`wasm/renut_hlsl`, built by `wasm/src/translator/build_wasm_translator.sh` from culdcept-nx's XenosRecomp
+  with `BANJO_NX=<culdcept-nx>`) turns them into 0x11's form with culdcept-nx's `container_10.h`, keyed by their own
+  hash, as the port's translator does. `tools/make_release.py --nro-shaders <the port's
+  app/out/renut_switch_release/runtime_captures>` leaves the NRO's four out of its check. No DKSH cache (`"compile":
+  false`, the option hidden): the console compiles the seven in about a second at the first start.
 - **No DLC step** (`"dlc": false`) and no title update: the game needs neither.
 - **Packing** (2026-11-20, the user: "Just L4Z compress all files besides data04 rsp and effects which can be zxc
   compressed dont bother compressing movies or audio no navings therr"), by `game.json`'s `lz4` and `zxc` (the `zxc`
@@ -57,8 +62,8 @@ renut_nx_ultimate_installer (2ce44cf) with its own `game.json`, colours, `icon.p
   in the manifest); `node test/game_check_node.mjs <game folder>`: every case passes but "without d02.dat-d05.dat it is
   refused", which is Beautiful Katamari's own case (it names Katamari's archives); the page served by `serve.py` shows
   Culdcept's texts. A whole package (`test/full_node.mjs`) was not made (a 4.9 GB zip of game data).
-- Nothing here is published: the user publishes it (GitHub Pages) if they choose. The NRO carries translated shaders
-  of the game (see above): that is the user's decision before publishing.
+- Nothing here is published: the user publishes it (GitHub Pages) if they choose. The NRO carries the four translated
+  shaders the game makes at run time (see above; the page makes the other three from the player's `default.xex`).
 
 Everything else below is the template's text.
 

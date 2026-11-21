@@ -36,7 +36,9 @@ game.then((g) => {
   // the steps' numbers, over the ones this game shows
   let n = 0;
   for (const el of document.querySelectorAll('section:not([hidden]) h2 .n')) el.textContent = `${++n}. `;
-  $('compile-row').hidden = !g.shaders;
+  // culdcept-nx-installer (2026-11-21): game.json "compile": false makes no DKSH cache (Culdcept's seven shaders compile
+  // on the Switch in about a second), so the option is not shown
+  $('compile-row').hidden = !g.shaders || g.compile === false;
   $('movies-row').hidden = !g.movies;  // culdcept-nx-installer (2026-11-20): the movies' H.265 re-encode
   $('audio-row').hidden = !g.audio;  // and the sounds' Opus re-encode
   create.textContent = `Create ${g.package}.zip`;

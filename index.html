@@ -108,11 +108,12 @@
         music at 128 kbit/s). Needs a browser with an Opus encoder (Chrome, Edge or Firefox); without one, or unticked,
         they are copied as they are. The voices stay as they are.</span></label>
     <button id="create" class="primary" disabled>Create the zip</button>
-    <!-- culdcept-nx-installer: no shaders made here (game.json "shaders": false); the game files packed by its "lz4" and
-         "zxc" lists (2026-11-20) -->
+    <!-- culdcept-nx-installer: the three shaders of default.xex made here (game.json "shaders", 2026-11-21; no DKSH
+         cache: "compile": false); the game files packed by its "lz4" and "zxc" lists (2026-11-20) -->
     <p class="note">Your game's files are packed on all of this computer's cores, the archives with LZ4 and the effects with
       ZXC (the game reads them as they were), the movies re-encoded to H.265 and the music and effects to Opus (below):
-      about 4.7 GB down to 2.6 GB. The program carries the game's seven shaders itself (the Switch compiles them in
+      about 4.7 GB down to 2.6 GB. The three shaders stored in your game's <code>default.xex</code> are translated here
+      for the Switch; the program carries only the four the game makes while it runs (the Switch compiles all seven in
       about a second at the first start). The zip downloads while it is written.</p>
     <progress id="bar" max="1" value="0" hidden></progress>
     <div id="log" role="log" aria-live="polite"></div>

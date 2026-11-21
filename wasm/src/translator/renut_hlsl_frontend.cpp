@@ -4,7 +4,8 @@
  * build_wasm_translator.sh). From bejeweled3-nx's tools/renut_hlsl_frontend.cpp (peggle2-nx's, GPL-3.0). The
  * translator's main.cpp also compiles (DXC) and packages; the page runs DXC as its own module, so this only translates.
  *
- * Input:  a folder of shader containers (*.bin, big-endian, signature 0x102A11xx), one container per file.
+ * Input:  a folder of shader containers (*.bin, big-endian, signature 0x102A11xx, or 0x0E / 0x10 converted to it), one
+ *         container per file.
  * Output: <vs|ps>_<XXH3 of the container, 16 upper-case hex digits>.hlsl per container, the text banjo-nx's
  *         translator hands DXC, and <same>.txt with the numbers of the NRO's shader table. A pixel shader's .hlsl is in
  *         the form of the native build's first run (BANJO_HLSL_DUMP_ONLY: a "// pixel shader  hash=..." line first),
@@ -15,6 +16,7 @@
  * Exit status: 0 if every container was translated, 2 if some were not, 1 on a usage or I/O error.
  */
 #include "container_0e.h"  // Kameo's containers are version 0x0E
+#include "container_10.h"  // culdcept-nx-installer (2026-11-21): Culdcept Saga's are version 0x10 (XDK 2.0.3424)
 #include "shader_recompiler.h"
 
 #include <cstdint>
@@ -83,6 +85,11 @@ int main(int argc, char** argv) try {
     if (container_0e::IsContainer0E(data.data(), data.size())) {
       own_hash = XXH3_64bits(data.data(), size_t(container_0e::Rd(data.data(), 4)) + container_0e::Rd(data.data(), 8));
       data = container_0e::Convert(data.data());
+    } else if (container_10::IsContainer10(data.data(), data.size())) {
+      // culdcept-nx-installer (2026-11-21), as culdcept-nx's main.cpp: version 0x10 (only the definition table differs
+      // from 0x11) keeps the name of its own hash too, and is translated from its 0x11 form.
+      own_hash = XXH3_64bits(data.data(), size_t(container_10::Rd(data.data(), 4)) + container_10::Rd(data.data(), 8));
+      data = container_10::Convert(data.data());
     }
     if (data.size() < sizeof(ShaderContainer)) {
       std::printf("  %s: truncated\n", e.path().filename().string().c_str());

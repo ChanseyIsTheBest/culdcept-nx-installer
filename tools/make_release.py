@@ -2,7 +2,8 @@
 """renut_nx_ultimate_installer: fills release/ from a port's tree (made from the ultimate base) for one build of its NRO.
 
   python tools/make_release.py --port <port root> --nro <NRO> --game <game folder> [--edition "Xbox 360 disc"]
-      [--records <records.json>] [--pipeline-list <pipeline_list.bin>] [--file <src>[:<name>] ...] [--version 1.0.0]
+      [--records <records.json>] [--nro-shaders <captures>] [--pipeline-list <pipeline_list.bin>]
+      [--file <src>[:<name>] ...] [--version 1.0.0]
       [--update <the title update's extracted folder>] [--append]
 
 Writes into release/:
@@ -49,9 +50,10 @@ def sha256(data):
 
 
 def find_shader_headers(data):
-    """The port's tools/renut_shader_dump.py find_shader_headers (aligned), which made its dump."""
+    """The port's tools/renut_shader_dump.py find_shader_headers (aligned), which made its dump. culdcept-nx-installer
+    (2026-11-21): version 0x10's too (0x102A10xx: Culdcept Saga's, XDK 2.0.3424), which the page's translator reads."""
     hdrs = []
-    for m in re.finditer(rb'\x10\x2a\x11', data):
+    for m in re.finditer(rb'\x10\x2a[\x10\x11]', data):
         o = m.start()
         if o % 4 or o + 0x24 > len(data):
             continue
@@ -98,6 +100,10 @@ def main():
     ap.add_argument('--dump', default=None, help='default: <port>/out/renut_shader_dump')
     ap.add_argument('--glsl', default=None, help='the native GLSL, for the variant export (default <port>/out/deko3d_shaders/glsl_opt)')
     ap.add_argument('--records', default=None)
+    # culdcept-nx-installer (2026-11-21, banjo-nx's distribution build): the shaders the NRO carries itself (captures,
+    # <vs|ps>_<hash>.bin: the ones the game makes at run time; culdcept-nx's tools/renut_release_shaders.py
+    # --keep-runtime writes them to app/out/renut_switch_release/runtime_captures). Left out of the check below.
+    ap.add_argument('--nro-shaders', default=None)
     ap.add_argument('--pipeline-list', default=None)
     ap.add_argument('--file', action='append', default=[])
     ap.add_argument('--update', default=None, help='the title update, extracted (default.xexp and its data files)')
@@ -127,9 +133,15 @@ def main():
     # the shaders: every container of the dump, in default.xex or in a record
     if game_cfg.get('shaders'):
         wanted = {}
+        in_nro = set()
+        if a.nro_shaders:
+            in_nro = {n[:-4].lower() for n in os.listdir(a.nro_shaders) if re.fullmatch(r'(vs|ps)_[0-9a-fA-F]{16}\.bin', n)}
         for n in sorted(os.listdir(dump)):
-            if re.fullmatch(r'(vs|ps)_[0-9a-f]{16}\.bin', n):
+            if re.fullmatch(r'(vs|ps)_[0-9a-f]{16}\.bin', n) and n[:-4].lower() not in in_nro:
                 wanted[n[:-4].lower()] = open(os.path.join(dump, n), 'rb').read()
+        if in_nro:
+            build['nro_shaders'] = sorted(in_nro)
+            print(f'shaders the NRO carries itself (made at run time): {len(in_nro)}')
         in_image = {}
         for o in find_shader_headers(image):
             virt, phys = struct.unpack_from('>II', image, o + 4)

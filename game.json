@@ -2,7 +2,8 @@
   "title": "Culdcept Saga",
   "package": "culdcept-nx",
   "nro": "culdcept-nx.nro",
-  "shaders": false,
+  "shaders": true,
+  "compile": false,
   "lz4": [
     "(?!default\\.xex$|data/MOVIE/|data/SOUND/).*"
   ],

@@ -5,7 +5,7 @@
       "edition": "Xbox 360 disc",
       "xex_sha256": "1245e3d9ba5b3741d704d894311578acdc6c6c4421d9d042125e086db5acb4f8",
       "nro": "culdcept-nx.nro",
-      "nro_sha256": "d7ca0600c3e1a6e66486e9beae6c5c6dce530f376a1e0b0b53ccbac5b0941fd7",
+      "nro_sha256": "07cb30e01c6f03f1c8452de2fdac74f6cd4ee75ac656ab93684e38890d11ce30",
       "game_files": {
         "data/DATA00.RSP": 263102464,
         "data/DATA01.RSP": 164489216,
@@ -5868,7 +5868,23 @@
         "layout/layout900.RSL": 1109,
         "layout/layout9999.RSL": 17880
       },
-      "files": []
+      "nro_shaders": [
+        "ps_50216cc1ca6dfdd2",
+        "ps_64b2f738050c9f44",
+        "vs_8f1cfe22ff57053e",
+        "vs_a30e85112e4d1837"
+      ],
+      "shaders": {
+        "image_sha256": [
+          "0c43f3e7811d38aeab6bca0f842abafa7c641f9f23e64ccd1e78a72eb776ef62",
+          "6990e869051cac5a9f97385e3f1c959c1724af7fb80e6503a52240891e29c042",
+          "c32e672333ac6d8ed3c455d2862b5958caf86f1a6e499e1095dd94ad7b7d8d2c"
+        ],
+        "records": []
+      },
+      "files": [],
+      "deko3d_glsl_sha256": "028f7b72da925ae7a57d43f46592c8d979a9ed57923dd3b00452694819517e8d"
     }
-  ]
+  ],
+  "shader_common_sha256": "50055a31d50e7192271d53d4056497cb52a65d7f1050fd871be9041445ad6240"
 }
