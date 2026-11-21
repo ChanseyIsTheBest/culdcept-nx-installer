@@ -1,6 +1,6 @@
 # culdcept-nx-installer
 
-Version 1.0.0, for **culdcept-nx 1.0.0**: Culdcept Saga on the Nintendo Switch (homebrew), by ChanseyIsTheBest.
+Version 1.0.1, for **culdcept-nx 1.0.1**: Culdcept Saga on the Nintendo Switch (homebrew), by ChanseyIsTheBest.
 
 **Open the page: https://chanseyisthebest.github.io/culdcept-nx-installer/**
 

@@ -1,11 +1,11 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "builds": [
     {
       "edition": "Xbox 360 disc",
       "xex_sha256": "1245e3d9ba5b3741d704d894311578acdc6c6c4421d9d042125e086db5acb4f8",
       "nro": "culdcept-nx.nro",
-      "nro_sha256": "07cb30e01c6f03f1c8452de2fdac74f6cd4ee75ac656ab93684e38890d11ce30",
+      "nro_sha256": "6f3280e452c1a60167b4cc2798365d695131ba6407ce1f5d86791512d2884df3",
       "game_files": {
         "data/DATA00.RSP": 263102464,
         "data/DATA01.RSP": 164489216,
