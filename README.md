@@ -1,5 +1,16 @@
 # culdcept-nx-installer
 
+Version 1.0.0, for **culdcept-nx 1.0.0**: Culdcept Saga on the Nintendo Switch (homebrew), by ChanseyIsTheBest.
+
+**Open the page: https://chanseyisthebest.github.io/culdcept-nx-installer/**
+
+This page makes the Switch package from **your own copy** of the game (its `.iso` disc image or the folder it was
+extracted to). It runs entirely in your browser (Chrome or Edge recommended): your game files are not uploaded, and none
+of the game's files come with culdcept-nx. Extract the `culdcept-nx.zip` it gives you to the root of the SD card; the
+rest of the steps are in [culdcept-nx's README](https://github.com/ChanseyIsTheBest/culdcept-nx#how-to-install).
+
+## For developers
+
 The web installer of culdcept-nx (Culdcept Saga, Xbox 360 title 424107DD, on the Switch), a copy of
 renut_nx_ultimate_installer (2ce44cf) with its own `game.json`, colours, `icon.png` (the user's Culdcept Saga image, as the NRO's icon) and `release/`
 (made by `tools/make_release.py` from culdcept-nx's build). What differs from the template:
@@ -62,8 +73,9 @@ renut_nx_ultimate_installer (2ce44cf) with its own `game.json`, colours, `icon.p
   in the manifest); `node test/game_check_node.mjs <game folder>`: every case passes but "without d02.dat-d05.dat it is
   refused", which is Beautiful Katamari's own case (it names Katamari's archives); the page served by `serve.py` shows
   Culdcept's texts. A whole package (`test/full_node.mjs`) was not made (a 4.9 GB zip of game data).
-- Nothing here is published: the user publishes it (GitHub Pages) if they choose. The NRO carries the four translated
-  shaders the game makes at run time (see above; the page makes the other three from the player's `default.xex`).
+- Published 2026-11-21 on GitHub Pages (main, the repository's root, with `.nojekyll` so every file is served as git
+  stores it). The NRO carries the four translated shaders the game makes at run time (see above; the page makes the
+  other three from the player's `default.xex`).
 
 Everything else below is the template's text.
 
